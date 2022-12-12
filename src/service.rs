@@ -5,7 +5,7 @@ use crate::db::CollectionsRepository;
 use self::todo::{TodoService, TodoServiceBuilder};
 
 pub mod todo;
-#[derive(Builder)]
+#[derive(Builder, Clone)]
 pub struct Services {
     pub todo: TodoService,
 }
