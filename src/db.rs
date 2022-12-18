@@ -2,8 +2,9 @@ pub mod todo;
 
 use derive_builder::Builder;
 use futures::stream::TryStreamExt;
+use mongodb::bson::doc;
 use mongodb::options::ClientOptions;
-use mongodb::{Client, Collection, Database};
+use mongodb::{error::Result as MongoDBResult, Client, Collection, Database};
 use thiserror::Error;
 
 use self::todo::{get_todo_collection, TodoDocument};
@@ -33,6 +34,11 @@ impl CollectionsRepository {
             todos_vec.push(td);
         }
         Ok(todos_vec)
+    }
+
+    pub async fn add_todo(&self, todo: TodoDocument) -> MongoDBResult<String> {
+        let inserted_todo = self.todo.insert_one(todo, None).await?;
+        Ok(inserted_todo.inserted_id.to_string())
     }
 }
 pub async fn get_collections() -> Result<CollectionsRepository, CollectionsRepositoryError> {

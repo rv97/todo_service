@@ -1,10 +1,17 @@
 use std::{sync::Arc, vec};
 
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result as ActixResult};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result as ActixResult};
 use todoservice::{db::todo::TodoDocument, service::Services};
 
 pub struct AppState {
     services: Arc<Services>,
+}
+
+#[post("/addtodo")]
+async fn add_todo(data: web::Data<AppState>, item: web::Json<TodoDocument>) -> impl Responder {
+    let local_todo = TodoDocument::new(item.title(), item.description(), item.is_completed());
+    let inserted_todo = data.services.todo.add_todo(local_todo).await.unwrap();
+    HttpResponse::Ok().json(web::Json(inserted_todo))
 }
 
 #[get("/todos")]
@@ -23,6 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 services: Arc::new(services.clone()),
             }))
             .service(get_all_todos)
+            .service(add_todo)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
